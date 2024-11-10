@@ -10,7 +10,7 @@ if SERVER then
 
 
 -- This value should be half of your maximum amount of bots
-local MAX_BOTS = 15
+local MAX_BOTS = 25
 
 -- random value, higher number, lower chance
 local FAST_SPAWN_CHANCE=3
@@ -52,7 +52,7 @@ local IDLE_INTERVAL=0.5
 local bots = {}
 local tempBot
 
-local playersCanDamage = {owner()}--,find.playerBySteamID("STEAM_0:1:543171717")}--find.playersByName("greg", nil, nil)[1],
+local playersCanDamage = {owner()}--,find.playerBySteamID("STEAM_0:0:484456086")}--find.playersByName("greg", nil, nil)[1],
 
 timer.create("Spawner", 0.25, 0, function()
     if table.count(bots) < MAX_BOTS then
@@ -144,40 +144,43 @@ timer.create("Follow", 0.25, 0, function()
                 bots[i]:removeGotoPos()
             end
             if bots[i]:getHealth() <= 0 or ( bots[i]:getPos() - gotoPos ):getLength() > DELETE_RANGE then
-                local nav = navmesh.getNavArea(bots[i]:getPos()+Vector(math.rand(SPAWN_RADIUS_REINFORCEMENT[1],SPAWN_RADIUS_REINFORCEMENT[2]),0,0):rotateAroundAxis(Vector(0,0,1),math.rand(-360,360)), 2500)
-                if nav != nil and nextbot.canSpawn() == true then
-                    local spawn = nav:getRandomPoint()
-                    
-                    local isFast = math.round(math.rand(0,FAST_SPAWN_CHANCE)) == FAST_SPAWN_CHANCE
-                    
-                    if isFast then
-                        model = "models/player/zombie_fast.mdl"
-                        speed = SPEED_FAST
-                        health = HEALTH_FAST
-                    else
-                        model = "models/player/zombie_classic.mdl"
-                        speed = SPEED_SLOW
-                        health = HEALTH_SLOW
+                if nextbot.canSpawn() == true then
+                    local pos = bots[i]:getPos()
+                    bots[i]:remove()
+                    table.remove(bots,i)
+                    local nav = navmesh.getNavArea(pos+Vector(math.rand(SPAWN_RADIUS_REINFORCEMENT[1],SPAWN_RADIUS_REINFORCEMENT[2]),0,0):rotateAroundAxis(Vector(0,0,1),math.rand(-360,360)), 2500)
+                    if nav != nil then
+                        local spawn = nav:getRandomPoint()
+                        
+                        local isFast = math.round(math.rand(0,FAST_SPAWN_CHANCE)) == FAST_SPAWN_CHANCE
+                        
+                        if isFast then
+                            model = "models/player/zombie_fast.mdl"
+                            speed = SPEED_FAST
+                            health = HEALTH_FAST
+                        else
+                            model = "models/player/zombie_classic.mdl"
+                            speed = SPEED_SLOW
+                            health = HEALTH_SLOW
+                        end
+                        
+                        tempBot = nextbot.create(spawn, model )
+                        
+                        table.insert(bots, tempBot )
+                        
+                        tempBot:setNocollideAll(NOCOLLIDE)
+                        tempBot:setRunAct(1779)
+                        tempBot:setIdleAct(1777)
+                        tempBot:setMoveSpeed(speed)
+                        tempBot:setHealth(health)
+                        tempBot:setDeathDropHeight(1)
+                        tempBot:setClimbAllowed(true)
+                        tempBot:setStepHeight(25)
+                        tempBot:setDeceleration(800)
+                        tempBot:setAcceleration(800)
+                        tempBot:setMaxYawRate(300)
                     end
-                    
-                    tempBot = nextbot.create(spawn, model )
-                    
-                    table.insert(bots, tempBot )
-                    
-                    tempBot:setNocollideAll(NOCOLLIDE)
-                    tempBot:setRunAct(1779)
-                    tempBot:setIdleAct(1777)
-                    tempBot:setMoveSpeed(speed)
-                    tempBot:setHealth(health)
-                    tempBot:setDeathDropHeight(1)
-                    tempBot:setClimbAllowed(true)
-                    tempBot:setStepHeight(25)
-                    tempBot:setDeceleration(800)
-                    tempBot:setAcceleration(800)
-                    tempBot:setMaxYawRate(300)
                 end
-                bots[i]:remove()
-                table.remove(bots,i)
             end
         end
     end
